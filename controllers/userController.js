@@ -1,20 +1,38 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("../config/cloudinary");
+
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
-    const existing = await User.findOne({ email });
-    if (existing)
-      return res.status(400).json({ message: "Email already exists" });
-    const hashedpassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedpassword, role });
-    await newUser.save();
+    const { name, email, password, phone, role, address, profilePic } = req.body;
 
-    res.status(200).json({ message: "User registered successfully" });
+    const exist = await User.findOne({ email });
+    if (exist) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      role,
+      address,
+      profilePic: profilePic || "", // Cloudinary URL
+    });
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: newUser,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.log("Register Error:", error);
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -99,3 +117,43 @@ exports.logout = async (req, res) =>{
     res.status(500).json({ message: error.message });
   }
 }
+
+//upload profilepic
+exports.uploadProfile = async (req, res) => {
+    try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "profilePics" },
+      async (error, result) => {
+        if (error) {
+          console.error("Cloudinary Upload Error:", error);
+          return res.status(500).json({
+            message: "Cloudinary error",
+            error,
+          });
+        }
+
+        // 🔥 SAVE PROFILE PIC URL INTO DATABASE
+        const updatedUser = await User.findByIdAndUpdate(
+          req.user.id,
+          { profilePic: result.secure_url },
+          { new: true }
+        );
+
+        return res.json({
+          message: "Upload successful",
+          user: updatedUser,
+        });
+      }
+    );
+
+    uploadStream.end(req.file.buffer);
+
+  } catch (err) {
+    console.error("Server Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
