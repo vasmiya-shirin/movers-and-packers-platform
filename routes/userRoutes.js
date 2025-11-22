@@ -5,10 +5,10 @@ const { authUser } = require("../middlewares/auth");
 const { checkRole } = require("../middlewares/roleCheck");
 const upload = require("../middlewares/multer");
 
-router.post("/register", userController.register);
+router.post("/register", upload.single("profilePic"), userController.register);
 router.post("/login", userController.login);
 router.get("/profile", authUser, userController.getProfile);
-
+router.put("/edit-profile", authUser, userController.updateLoggedInUser);
 router.get("/", authUser, checkRole(["admin"]), userController.getAllusers);
 router.put("/:id", authUser, userController.updateUser);
 router.delete(
@@ -23,8 +23,8 @@ router.post("/logout", authUser, userController.logout);
 
 router.post(
   "/upload-profile",
-  upload.single("profilePic"),
   authUser,
+  upload.single("profilePic"),
   userController.uploadProfile
 );
 

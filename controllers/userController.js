@@ -6,11 +6,27 @@ const cloudinary = require("../config/cloudinary");
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role, address, profilePic } = req.body;
+    const { name, email, password, phone, role, address } = req.body;
 
     const exist = await User.findOne({ email });
     if (exist) {
       return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // 🔹 Upload to Cloudinary if file is sent
+    let imageUrl = "";
+    if (req.file) {
+      const uploaded = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "movers" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(req.file.buffer);
+      });
+
+      imageUrl = uploaded.secure_url;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -22,7 +38,7 @@ exports.register = async (req, res) => {
       phone,
       role,
       address,
-      profilePic: profilePic || "", // Cloudinary URL
+      profilePic: imageUrl,
     });
 
     return res.status(201).json({
@@ -35,6 +51,8 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+
 
 exports.login = async (req, res) => {
   try {
@@ -60,6 +78,27 @@ exports.login = async (req, res) => {
 exports.getProfile = async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json(user);
+};
+exports.updateLoggedInUser = async (req, res) => {
+  try {
+    const userId = req.user.id; 
+    const { name, address, phone } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, address, phone },
+      { new: true }
+    );
+
+    return res.json({
+      message: "Profile updated",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.log("Edit profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 exports.getAllusers = async (req, res) => {
@@ -120,40 +159,22 @@ exports.logout = async (req, res) =>{
 
 //upload profilepic
 exports.uploadProfile = async (req, res) => {
-    try {
+  try {
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+      return res.status(400).json({ message: "No image uploaded" });
     }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "profilePics" },
-      async (error, result) => {
-        if (error) {
-          console.error("Cloudinary Upload Error:", error);
-          return res.status(500).json({
-            message: "Cloudinary error",
-            error,
-          });
-        }
+    const imagePath = `/uploads/${req.file.filename}`;
 
-        // 🔥 SAVE PROFILE PIC URL INTO DATABASE
-        const updatedUser = await User.findByIdAndUpdate(
-          req.user.id,
-          { profilePic: result.secure_url },
-          { new: true }
-        );
+    await User.findByIdAndUpdate(req.user.id, { profilePic: imagePath });
 
-        return res.json({
-          message: "Upload successful",
-          user: updatedUser,
-        });
-      }
-    );
-
-    uploadStream.end(req.file.buffer);
-
-  } catch (err) {
-    console.error("Server Error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.json({
+      success: true,
+      message: "Profile picture uploaded successfully",
+      profilePic: imagePath,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
