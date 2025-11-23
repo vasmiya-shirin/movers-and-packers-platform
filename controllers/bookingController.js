@@ -46,7 +46,7 @@ exports.getMyBookings = async (req, res) => {
   try {
     const filter =
       req.user.role === "provider"
-        ? { provider: req.iser.id }
+        ? { provider: req.user.id }
         : { client: req.user.id };
     const bookings = await Booking.find(filter)
       .populate("service", "title price")

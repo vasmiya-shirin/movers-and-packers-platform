@@ -69,7 +69,7 @@ exports.login = async (req, res) => {
       { expiresIn: "7d" }
     );
     res.cookie("token", token);
-    return res.status(200).json({ message: "login successfull", token, user });
+    return res.status(200).json({ message: "login successfull", token, user ,role: user.role});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
