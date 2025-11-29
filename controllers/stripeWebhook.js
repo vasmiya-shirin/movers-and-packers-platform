@@ -1,17 +1,28 @@
-const Payment = require("../models/paymentModel");
+const Payment=require("../models/paymentModel")
 
 exports.stripeWebhook = async (req, res) => {
   try {
     const event = req.body;
 
-    // Listens for successful payment event
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      await Payment.findOneAndUpdate(
-        { transactionId: session.id },
-        { status: "Completed" }
-      );
+      // Find payment record
+      const payment = await Payment.findOne({ transactionId: session.id });
+
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+
+      // Update payment
+      payment.status = "Completed";
+      await payment.save();
+
+      // Update booking to Paid
+      await Booking.findByIdAndUpdate(payment.booking, {
+        paymentStatus: "Paid",
+        status: "Accepted",     // or keep Pending if provider approves manually
+      });
     }
 
     res.status(200).json({ received: true });

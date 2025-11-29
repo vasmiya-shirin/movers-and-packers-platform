@@ -16,7 +16,19 @@ router.get(
   checkRole(["admin"]),
   bookingController.getAllBookings
 );
-router.get("/", authUser, bookingController.getMyBookings);
+router.get("/my", authUser, bookingController.getMyBookings);
+
+router.get(
+  "/provider-dashboard",
+  authUser,
+  bookingController.providerDashboard
+);
+router.get(
+  "/admin-dashboard",
+  authUser,
+  checkRole(["admin"]),
+  bookingController.adminDashboard
+);
 router.get("/:id", authUser, bookingController.getBookingById);
 router.put("/:id", authUser, bookingController.updateBooking);
 router.delete("/:id", authUser, bookingController.deleteBooking);

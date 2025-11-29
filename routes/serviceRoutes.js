@@ -11,6 +11,9 @@ router.post(
   serviceController.createService
 );
 router.get("/", serviceController.getServices);
+// GET /my-services -> only provider's own services
+router.get("/my-services", authUser, checkRole(["provider"]), serviceController.getProviderServices);
+
 router.get("/:id", serviceController.getServiceById);
 router.put(
   "/:id",
@@ -21,7 +24,7 @@ router.put(
 router.delete(
   "/:id",
   authUser,
-  checkRole(["admin"]),
+  checkRole(["provider", "admin"]),
   serviceController.deleteService
 );
 

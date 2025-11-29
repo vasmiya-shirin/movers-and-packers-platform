@@ -3,6 +3,10 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const http=require("http");
+const {Server}=require("socket.io");
+
+
 
 app.post(
   "/api/stripe/webhook",
@@ -31,6 +35,8 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const paymentRoutes=require("./routes/paymentRoutes")
 const reviewRoutes=require("./routes/reviewRoutes")
 const uploadRoutes=require("./routes/uploadRoutes")
+const providerRoutes=require("./routes/providerRoutes")
+const messageRoutes=require("./routes/messageRoutes")
 
 connectDB();
 
@@ -45,7 +51,35 @@ app.use("/api/payments",paymentRoutes)
 app.use("/api/reviews",reviewRoutes)
 app.use("/api/users",uploadRoutes)
 app.use("/api/stripe",paymentRoutes);
+app.use("/api/provider", providerRoutes);
+app.use("/api/messages",messageRoutes)
 
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  // Join chat room by booking ID
+  socket.on("join-room", (bookingId) => {
+    socket.join(bookingId);
+  });
+
+  // Send message to room
+  socket.on("send-message", (data) => {
+    io.to(data.bookingId).emit("receive-message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
 
 app.listen(process.env.PORT, () => {
   console.log(`server running at http://localhost:${process.env.PORT}`);
