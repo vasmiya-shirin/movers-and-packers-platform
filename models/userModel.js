@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
       default: "client",
     },
     address: { type: String },
-    isVerified: { type: Boolean, default: true },
+    isVerified: { type: Boolean, default: false },
     profilePic: {
       type: String, // Cloudinary image URL
       default: "", // Default empty string

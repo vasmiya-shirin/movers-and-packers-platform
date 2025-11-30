@@ -37,7 +37,7 @@ const reviewRoutes=require("./routes/reviewRoutes")
 const uploadRoutes=require("./routes/uploadRoutes")
 const providerRoutes=require("./routes/providerRoutes")
 const messageRoutes=require("./routes/messageRoutes")
-
+const adminRoutes=require("./routes/adminRoutes")
 connectDB();
 
 app.get("/", (req, res) => {
@@ -53,6 +53,7 @@ app.use("/api/users",uploadRoutes)
 app.use("/api/stripe",paymentRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/messages",messageRoutes)
+app.use("/api/admin",adminRoutes)
 
 const server = http.createServer(app);
 
@@ -81,6 +82,6 @@ io.on("connection", (socket) => {
   });
 });
 
-app.listen(process.env.PORT, () => {
+server.listen(process.env.PORT, () => {
   console.log(`server running at http://localhost:${process.env.PORT}`);
 });

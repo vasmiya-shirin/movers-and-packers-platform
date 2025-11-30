@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
 
-
 exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role, address } = req.body;
@@ -17,13 +16,12 @@ exports.register = async (req, res) => {
     let imageUrl = "";
     if (req.file) {
       const uploaded = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "movers" },
-          (error, result) => {
+        cloudinary.uploader
+          .upload_stream({ folder: "movers" }, (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          }
-        ).end(req.file.buffer);
+          })
+          .end(req.file.buffer);
       });
 
       imageUrl = uploaded.secure_url;
@@ -39,20 +37,18 @@ exports.register = async (req, res) => {
       role,
       address,
       profilePic: imageUrl,
+      isVerified: role === "provider" ? false : true,
     });
 
     return res.status(201).json({
       message: "User registered successfully",
       user: newUser,
     });
-
   } catch (error) {
     console.log("Register Error:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };
-
-
 
 exports.login = async (req, res) => {
   try {
@@ -63,13 +59,21 @@ exports.login = async (req, res) => {
     const ismatch = await bcrypt.compare(password, user.password);
     if (!ismatch) return res.status(400).json({ message: "Invalid password" });
 
+    if (user.role === "provider" && user.isVerified === false) {
+      return res.status(403).json({
+        message: "Your provider account is awaiting admin approval.",
+      });
+    }
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
     res.cookie("token", token);
-    return res.status(200).json({ message: "login successfull", token, user ,role: user.role});
+    return res
+      .status(200)
+      .json({ message: "login successfull", token, user, role: user.role });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -81,7 +85,7 @@ exports.getProfile = async (req, res) => {
 };
 exports.updateLoggedInUser = async (req, res) => {
   try {
-    const userId = req.user.id; 
+    const userId = req.user.id;
     const { name, address, phone } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -94,7 +98,6 @@ exports.updateLoggedInUser = async (req, res) => {
       message: "Profile updated",
       user: updatedUser,
     });
-
   } catch (error) {
     console.log("Edit profile error:", error);
     res.status(500).json({ message: "Server error" });
@@ -140,22 +143,24 @@ exports.deleteUser = async (req, res) => {
 };
 
 //Check current user (verify token)
-exports.checkUser = async (req, res) =>{
-    try {
+exports.checkUser = async (req, res) => {
+  try {
     res.status(200).json({ user: req.user, message: "User authenticated" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 //Logout
-exports.logout = async (req, res) =>{
-    try {
-     res.status(200).json({ message: "Logout successful (remove token client-side)" });
+exports.logout = async (req, res) => {
+  try {
+    res
+      .status(200)
+      .json({ message: "Logout successful (remove token client-side)" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 //upload profilepic
 exports.uploadProfile = async (req, res) => {
