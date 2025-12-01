@@ -57,10 +57,10 @@ exports.getMyBookings = async (req, res) => {
       req.user.role === "provider"
         ? { provider: req.user.id }
         : { client: req.user.id };
-    const bookings = await Booking.find(filter)
-      .populate("service", "title price")
-      .populate("provider", "name email")
-      .populate("client", "name email");
+    const bookings = await Booking.find({ client: req.user._id })
+  .populate("service")
+  .populate("provider")
+  .sort({ createdAt: -1 });
     res.status(200).json({ message: "success", bookings });
   } catch (error) {
     res.status(500).json({ message: error.message });
