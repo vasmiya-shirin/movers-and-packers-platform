@@ -27,9 +27,13 @@ const userSchema = new mongoose.Schema(
       },
     },
     availability: {
-      days: [String], 
-      from: String, 
-      to: String, 
+      days: [String],
+      startTime: String,
+      endTime: String,
+    },
+    availableLocations: {
+      type: [String],
+      default: [],
     },
   },
   { timestamps: true }

@@ -83,6 +83,7 @@ exports.getProfile = async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json(user);
 };
+
 exports.updateLoggedInUser = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -103,6 +104,19 @@ exports.updateLoggedInUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Get user by ID (for provider info)
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 exports.getAllusers = async (req, res) => {
   try {
@@ -183,3 +197,26 @@ exports.uploadProfile = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+//check availability
+exports.availabilityCheck=async (req,res)=>{
+  try {
+    const { availableLocations, startTime, endTime, days } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        availableLocations,
+        availability: {
+          startTime,
+          endTime,
+          days,
+        },
+      },
+      { new: true }
+    );
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: "Update failed" });
+  }
+}

@@ -10,6 +10,8 @@ router.post("/login", userController.login);
 router.get("/profile", authUser, userController.getProfile);
 router.put("/edit-profile", authUser, userController.updateLoggedInUser);
 router.get("/", authUser, checkRole(["admin"]), userController.getAllusers);
+router.get("/:id", authUser, userController.getUserById);
+router.put("/availability",authUser,userController.availabilityCheck);
 router.put("/:id", authUser, userController.updateUser);
 router.delete(
   "/:id",

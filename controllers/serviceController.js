@@ -2,12 +2,13 @@ const Service = require("../models/serviceModel");
 
 exports.createService = async (req, res) => {
   try {
-    const { title, description, price, availableLocations } = req.body;
+    const { title, description, price, availableLocations,availability } = req.body;
     const service = new Service({
       title,
       description,
       price,
       availableLocations,
+      availability,
       provider: req.user.id,
     });
     await service.save();

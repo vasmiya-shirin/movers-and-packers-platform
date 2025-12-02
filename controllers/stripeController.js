@@ -9,11 +9,16 @@ exports.createCheckoutSession = async (req, res) => {
   try {
     const { bookingId } = req.body;
 
-    //get booking details
     const booking = await Booking.findById(bookingId);
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    
+    // ✅ Check if service is completed
+    if (booking.status !== "Completed") {
+      return res.status(400).json({ 
+        message: "Payment is allowed only for completed services." 
+      });
+    }
+
     const amount = booking.totalPrice * 100;
 
     const session = await stripe.checkout.sessions.create({
@@ -22,7 +27,7 @@ exports.createCheckoutSession = async (req, res) => {
         {
           price_data: {
             currency: "inr",
-            product_data: { name: "Movers & Packers Booking" },
+            product_data: { name: booking.service?.title || "Service Booking" },
             unit_amount: amount,
           },
           quantity: 1,
@@ -33,7 +38,7 @@ exports.createCheckoutSession = async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL}/payment-failed`,
     });
 
-    //create payment entry with pending status
+    // Create payment entry
     const payment = new Payment({
       booking: bookingId,
       amount: booking.totalPrice,

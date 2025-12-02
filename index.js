@@ -41,6 +41,8 @@ const uploadRoutes=require("./routes/uploadRoutes")
 const providerRoutes=require("./routes/providerRoutes")
 const messageRoutes=require("./routes/messageRoutes")
 const adminRoutes=require("./routes/adminRoutes")
+const contactRoutes=require("./routes/contactRoutes")
+
 connectDB();
 
 app.get("/", (req, res) => {
@@ -57,6 +59,7 @@ app.use("/api/stripe",paymentRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/messages",messageRoutes)
 app.use("/api/admin",adminRoutes)
+app.use("/api/contact",require("./routes/contactRoutes"))
 
 const server = http.createServer(app);
 

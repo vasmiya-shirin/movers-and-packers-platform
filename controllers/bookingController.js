@@ -5,8 +5,7 @@ const Service = require("../models/serviceModel");
 //create booking
 exports.createBooking = async (req, res) => {
   try {
-    const { service, pickupLocation, dropLocation, date, totalPrice } =
-      req.body;
+    const { service, pickupLocation, dropLocation, date, totalPrice } = req.body;
 
     // 1. Find service info
     const serviceData = await Service.findById(service);
@@ -14,10 +13,21 @@ exports.createBooking = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    // 2. Provider comes from service model (NOT frontend)
+    // 2. CASE-INSENSITIVE LOCATION CHECK
+    const servesPickup = serviceData.availableLocations.some(
+      (loc) => loc.toLowerCase() === pickupLocation.toLowerCase()
+    );
+
+    if (!servesPickup) {
+      return res
+        .status(400)
+        .json({ message: "Provider does not serve your pickup location" });
+    }
+
+    // 3. Provider comes from service model (NOT frontend)
     const providerId = serviceData.provider;
 
-    // 3. Create booking
+    // 4. Create booking
     const booking = await Booking.create({
       client: req.user._id,
       provider: providerId,
@@ -36,6 +46,7 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 //get all bookings(admin only)
 exports.getAllBookings = async (req, res) => {

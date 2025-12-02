@@ -10,6 +10,7 @@ const serviceSchema = new mongoose.Schema({
     required: true,
   },
   availableLocations: [ String ],
+  availability: [Date],
   isActive: { type: Boolean, default: true },
 });
 
