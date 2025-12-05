@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http=require("http");
 const {Server}=require("socket.io");
-
+const { HfInference } = require("@huggingface/inference");
 
 
 app.post(
@@ -59,7 +59,7 @@ app.use("/api/stripe",paymentRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/messages",messageRoutes)
 app.use("/api/admin",adminRoutes)
-app.use("/api/contact",require("./routes/contactRoutes"))
+app.use("/api/contact",contactRoutes)
 
 const server = http.createServer(app);
 
@@ -86,6 +86,33 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
+});
+
+const client = new HfInference(process.env.HF_API_KEY);
+
+// Choose your model
+const MODEL = "meta-llama/Llama-3.1-8B-Instruct";
+
+app.post("/api/chat", async (req, res) => {
+  const userMessage = req.body.message;
+
+  if (!userMessage) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  try {
+    const response = await client.chatCompletion({
+      model: MODEL,
+      messages: [{ role: "user", content: userMessage }],
+      max_tokens: 200,
+    });
+
+    res.json({ reply: response.choices[0].message.content });
+
+  } catch (err) {
+    console.error("🔥 HUGGINGFACE ERROR:", err);
+    res.status(500).json({ error: "HuggingFace API Error" });
+  }
 });
 
 server.listen(process.env.PORT, () => {
