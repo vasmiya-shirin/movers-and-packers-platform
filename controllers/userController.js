@@ -2,6 +2,8 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 exports.register = async (req, res) => {
   try {
@@ -79,6 +81,78 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Email not found" });
+
+    // Create token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetToken = resetToken;
+    user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    // Reset URL (frontend)
+    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+
+    // Email setup
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `
+        <p>You requested a password reset.</p>
+        <p>Click the link to reset your password:</p>
+        <a href="${resetURL}" target="_blank">${resetURL}</a>
+        <p>This link is valid for 10 minutes.</p>
+      `,
+    });
+
+    res.json({ message: "Reset link sent to email" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpire: { $gt: Date.now() }, // token valid?
+    });
+
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+    await user.save();
+
+    res.json({ message: "Password reset successful!" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.getProfile = async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json(user);
@@ -116,7 +190,6 @@ exports.getUserById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.getAllusers = async (req, res) => {
   try {
@@ -198,7 +271,7 @@ exports.uploadProfile = async (req, res) => {
   }
 };
 //check availability
-exports.availabilityCheck=async (req,res)=>{
+exports.availabilityCheck = async (req, res) => {
   try {
     const { availableLocations, startTime, endTime, days } = req.body;
 
@@ -219,4 +292,4 @@ exports.availabilityCheck=async (req,res)=>{
   } catch (err) {
     res.status(500).json({ error: "Update failed" });
   }
-}
+};

@@ -7,11 +7,13 @@ const upload = require("../middlewares/multer");
 
 router.post("/register", upload.single("profilePic"), userController.register);
 router.post("/login", userController.login);
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password/:token", userController.resetPassword);
 router.get("/profile", authUser, userController.getProfile);
 router.put("/edit-profile", authUser, userController.updateLoggedInUser);
 router.get("/", authUser, checkRole(["admin"]), userController.getAllusers);
 router.get("/:id", authUser, userController.getUserById);
-router.put("/availability",authUser,userController.availabilityCheck);
+router.put("/availability", authUser, userController.availabilityCheck);
 router.put("/:id", authUser, userController.updateUser);
 router.delete(
   "/:id",
