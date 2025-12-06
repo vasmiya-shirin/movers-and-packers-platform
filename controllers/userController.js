@@ -96,14 +96,17 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // Reset URL (frontend)
-   const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-   
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
     // Email setup
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL,
         pass: process.env.EMAIL_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     });
 
@@ -184,7 +187,6 @@ exports.updateLoggedInUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // Get user by ID (for provider info)
 exports.getUserById = async (req, res) => {
