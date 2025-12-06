@@ -96,8 +96,8 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // Reset URL (frontend)
-    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
-
+   const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+   
     // Email setup
     const transporter = nodemailer.createTransport({
       service: "gmail",
