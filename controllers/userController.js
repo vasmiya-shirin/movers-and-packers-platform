@@ -115,6 +115,7 @@ exports.forgotPassword = async (req, res) => {
       to: user.email,
       subject: "Password Reset Request",
       html: `
+        <p>Hello ${user.name || ""},</p>
         <p>You requested a password reset.</p>
         <p>Click the link to reset your password:</p>
         <a href="${resetURL}" target="_blank">${resetURL}</a>
