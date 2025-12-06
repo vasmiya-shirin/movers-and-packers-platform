@@ -35,7 +35,7 @@ exports.createBooking = async (req, res) => {
       pickupLocation,
       dropLocation,
       date,
-      totalPrice,
+       totalPrice: totalPrice || serviceData.price,
     });
 
     res.status(200).json({
@@ -222,45 +222,41 @@ exports.adminDashboard = async (req, res) => {
     const bookings = await Booking.find()
       .populate("client", "name email")
       .populate("provider", "name email")
-      .populate("service", "title price");
+      .populate("service", "title price")
+      .lean();
 
     const totalBookings = bookings.length;
     const pending = bookings.filter((b) => b.status === "Pending").length;
     const completed = bookings.filter((b) => b.status === "Completed").length;
     const cancelled = bookings.filter((b) => b.status === "Cancelled").length;
 
+    // Correct earnings calculation (no more 200002000)
     const earnings = bookings
       .filter((b) => b.status === "Completed")
-      .reduce((sum, b) => sum + (b.service?.price || 0), 0);
+      .reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
 
     const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
 
+    // Clean storage for monthly aggregation
     let monthlyEarnings = {};
     let monthlyCounts = {};
 
     for (let b of bookings) {
       if (b.status !== "Completed") continue;
 
-      const month = monthNames[new Date(b.createdAt).getMonth()];
-      const amount = b.service?.price || 0;
+      const monthIndex = new Date(b.createdAt).getMonth();
+      const month = monthNames[monthIndex];
+
+      const amount = Number(b.totalPrice || 0);
 
       monthlyEarnings[month] = (monthlyEarnings[month] || 0) + amount;
       monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
     }
 
+    // Build final graph data for frontend
     const earningsHistory = monthNames.map((m) => ({
       month: m,
       amount: monthlyEarnings[m] || 0,

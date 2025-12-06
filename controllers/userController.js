@@ -161,11 +161,17 @@ exports.getProfile = async (req, res) => {
 exports.updateLoggedInUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, address, phone } = req.body;
+
+    const { name, address, phone, profilePic } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { name, address, phone },
+      {
+        name,
+        address,
+        phone,
+        profilePic, // <-- NOW IT WORKS
+      },
       { new: true }
     );
 
@@ -178,6 +184,7 @@ exports.updateLoggedInUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // Get user by ID (for provider info)
 exports.getUserById = async (req, res) => {
