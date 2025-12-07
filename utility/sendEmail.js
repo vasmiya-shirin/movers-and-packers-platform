@@ -5,7 +5,7 @@ const sendEmail = async ({ to, subject, html }) => {
   try {
     await resend.emails.send({
       from: process.env.EMAIL_FROM,
-      to,
+      to:"vasmiyak@gmail.com",
       subject,
       html,
     });
