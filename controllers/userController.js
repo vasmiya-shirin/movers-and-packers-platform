@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
 const crypto = require("crypto");
-const sendEmail=require("../utility/sendEmail")
+const nodemailer = require("nodemailer");
 
 exports.register = async (req, res) => {
   try {
@@ -88,35 +88,44 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Email not found" });
 
-    // Generate token
+    // Create token
     const resetToken = crypto.randomBytes(32).toString("hex");
+
     user.resetToken = resetToken;
     user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
+    // Reset URL (frontend)
     const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    const html = `
-      <p>Hello ${user.name || ""},</p>
-      <p>You requested a password reset.</p>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetURL}" target="_blank">${resetURL}</a>
-      <p>This link expires in 10 minutes.</p>
-    `;
-
-    const success = await sendEmail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html,
+    // Email setup
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
 
-    if (!success) {
-      return res.status(500).json({ message: "Email sending failed" });
-    }
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `
+        <p>Hello ${user.name || ""},</p>
+        <p>You requested a password reset.</p>
+        <p>Click the link to reset your password:</p>
+        <a href="${resetURL}" target="_blank">${resetURL}</a>
+        <p>This link is valid for 10 minutes.</p>
+      `,
+    });
 
     res.json({ message: "Reset link sent to email" });
   } catch (err) {
-    console.log("Forgot Password Error:", err);
+    console.log(err);
     res.status(500).json({ message: "Server error" });
   }
 };
