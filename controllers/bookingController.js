@@ -61,22 +61,30 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-//get bookings by logged-in user(client or provider)
 exports.getMyBookings = async (req, res) => {
+  console.log("🔹 getMyBookings called");
+  console.log("req.user:", req.user);
+
   try {
     const filter =
       req.user.role === "provider"
-        ? { provider: req.user.id }
-        : { client: req.user.id };
-    const bookings = await Booking.find({ client: req.user._id })
-  .populate("service")
-  .populate("provider")
-  .sort({ createdAt: -1 });
+        ? { provider: req.user._id }
+        : { client: req.user._id };
+
+    const bookings = await Booking.find(filter)
+      .populate("service")
+      .populate("provider", "name email")
+      .populate("client", "name email")
+      .sort({ createdAt: -1 });
+      console.log("bookings fetched:", bookings);
     res.status(200).json({ message: "success", bookings });
   } catch (error) {
+    console.log("🔥 ERROR in getMyBookings:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 //get single booking by id
 exports.getBookingById = async (req, res) => {
