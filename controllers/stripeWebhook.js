@@ -29,14 +29,17 @@ exports.stripeWebhook = async (req, res) => {
       payment.paymentIntentId = session.payment_intent;
       await payment.save();
 
-      // ✅ Only update paymentStatus, NOT booking status
-      await Booking.findByIdAndUpdate(payment.booking, {
-        paymentStatus: "Paid",
-      });
+      // Update booking status
+      const booking = await Booking.findById(payment.booking);
+      if (!booking) throw new Error("Booking not found");
 
-      console.log(`Booking ${payment.booking} marked as Paid`);
+      booking.paymentStatus = "Paid";
+      booking.status = "Completed";
+      await booking.save();
+
+      console.log(`Booking ${booking._id} marked as Paid`);
     } catch (err) {
-      console.error("Webhook processing error:", err.message);
+      console.error("Error updating payment/booking :", err.message);
     }
   }
 
