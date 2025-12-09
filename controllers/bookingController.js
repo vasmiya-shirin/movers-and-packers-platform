@@ -103,36 +103,24 @@ exports.getBookingById = async (req, res) => {
 
 //update booking
 exports.updateBooking = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
+  const { id } = req.params;
+  const updates = req.body;
 
-    const booking = await Booking.findById(id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+  const booking = await Booking.findById(id);
+  if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    // Allow: Admin OR Provider who owns the booking
-    if (
-      req.user.role !== "admin" &&
-      !(
-        req.user.role === "provider" &&
-        booking.provider.toString() === req.user.id
-      )
-    ) {
-      return res.status(403).json({ message: "Not allowed to update booking" });
-    }
-
-    const updatedBooking = await Booking.findByIdAndUpdate(id, updates, {
-      new: true,
-    });
-
-    res.status(200).json({
-      message: "Booking updated",
-      booking: updatedBooking,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  // Only admin or provider allowed
+  if (
+    req.user.role !== "admin" &&
+    !(req.user.role === "provider" && booking.provider.toString() === req.user.id)
+  ) {
+    return res.status(403).json({ message: "Not allowed to update booking" });
   }
+
+  const updatedBooking = await Booking.findByIdAndUpdate(id, updates, { new: true });
+  res.status(200).json({ message: "Booking updated", booking: updatedBooking });
 };
+
 
 //delete booking
 exports.deleteBooking = async (req, res) => {

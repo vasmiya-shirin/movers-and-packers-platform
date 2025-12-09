@@ -8,13 +8,17 @@ const {Server}=require("socket.io");
 const { HfInference } = require("@huggingface/inference");
 
 
-app.post(
-  "/api/stripe/webhook",
-  express.raw({ type: "application/json" }),
-  require("./controllers/stripeWebhook").stripeWebhook
+app.use("/api/stripe", require("./routes/stripeRoutes"));
+
+
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
 );
 
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
@@ -55,7 +59,6 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments",paymentRoutes)
 app.use("/api/reviews",reviewRoutes)
 app.use("/api/users",uploadRoutes)
-app.use("/api/stripe",paymentRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/messages",messageRoutes)
 app.use("/api/admin",adminRoutes)

@@ -1,6 +1,7 @@
+// controllers/stripeWebhook.js
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Booking = require("../models/bookingModel");
 const Payment = require("../models/paymentModel");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -8,38 +9,34 @@ exports.stripeWebhook = async (req, res) => {
 
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error("Webhook signature failed:", err.message);
+    return res.status(400).send(`Webhook error: ${err.message}`);
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
 
     try {
-      // Find the payment record
       const payment = await Payment.findOne({ transactionId: session.id });
-      if (!payment) throw new Error("Payment not found");
+      if (!payment) throw new Error("Payment record not found");
 
-      // Update payment status
       payment.status = "Completed";
+      payment.paymentIntentId = session.payment_intent;
       await payment.save();
 
-      // Update booking status
-      const booking = await Booking.findById(payment.booking);
-      if (!booking) throw new Error("Booking not found");
+      // ✅ Only update paymentStatus, NOT booking status
+      await Booking.findByIdAndUpdate(payment.booking, {
+        paymentStatus: "Paid",
+      });
 
-      booking.paymentStatus = "Paid";
-      booking.status = "Completed";
-      await booking.save();
-
-      console.log(`Booking ${booking._id} marked as Paid`);
+      console.log(`Booking ${payment.booking} marked as Paid`);
     } catch (err) {
-      console.error("Error updating payment/booking:", err.message);
+      console.error("Webhook processing error:", err.message);
     }
   }
 
