@@ -31,7 +31,9 @@ const bookingSchema = new mongoose.Schema(
       enum: ["Unpaid", "Paid"],
       default: "Unpaid",
     },
+    adminApproval: { type: Boolean, default: false },
   },
+  
   { timestamps: true }
 );
 

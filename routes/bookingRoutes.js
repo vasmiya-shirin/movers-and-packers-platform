@@ -3,6 +3,7 @@ const router = express.Router();
 const bookingController = require("../controllers/bookingController");
 const { authUser } = require("../middlewares/auth");
 const { checkRole } = require("../middlewares/roleCheck");
+const { route } = require("./paymentRoutes");
 
 router.post(
   "/",
@@ -30,6 +31,7 @@ router.get(
   bookingController.adminDashboard
 );
 router.get("/:id", authUser, bookingController.getBookingById);
+router.put("/:id",authUser,checkRole(["admin"]),bookingController.updateBookingStatus)
 router.put("/:id", authUser, bookingController.updateBooking);
 router.delete("/:id", authUser, bookingController.deleteBooking);
 

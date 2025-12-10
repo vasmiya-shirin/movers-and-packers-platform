@@ -5,7 +5,8 @@ const Service = require("../models/serviceModel");
 //create booking
 exports.createBooking = async (req, res) => {
   try {
-    const { service, pickupLocation, dropLocation, date, totalPrice } = req.body;
+    const { service, pickupLocation, dropLocation, date, totalPrice } =
+      req.body;
 
     // 1. Find service info
     const serviceData = await Service.findById(service);
@@ -35,7 +36,7 @@ exports.createBooking = async (req, res) => {
       pickupLocation,
       dropLocation,
       date,
-       totalPrice: totalPrice || serviceData.price,
+      totalPrice: totalPrice || serviceData.price,
     });
 
     res.status(200).json({
@@ -46,7 +47,6 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 //get all bookings(admin only)
 exports.getAllBookings = async (req, res) => {
@@ -76,15 +76,13 @@ exports.getMyBookings = async (req, res) => {
       .populate("provider", "name email")
       .populate("client", "name email")
       .sort({ createdAt: -1 });
-      console.log("bookings fetched:", bookings);
+    console.log("bookings fetched:", bookings);
     res.status(200).json({ message: "success", bookings });
   } catch (error) {
     console.log("🔥 ERROR in getMyBookings:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 //get single booking by id
 exports.getBookingById = async (req, res) => {
@@ -112,15 +110,36 @@ exports.updateBooking = async (req, res) => {
   // Only admin or provider allowed
   if (
     req.user.role !== "admin" &&
-    !(req.user.role === "provider" && booking.provider.toString() === req.user.id)
+    !(
+      req.user.role === "provider" &&
+      booking.provider.toString() === req.user.id
+    )
   ) {
     return res.status(403).json({ message: "Not allowed to update booking" });
   }
 
-  const updatedBooking = await Booking.findByIdAndUpdate(id, updates, { new: true });
+  const updatedBooking = await Booking.findByIdAndUpdate(id, updates, {
+    new: true,
+  });
   res.status(200).json({ message: "Booking updated", booking: updatedBooking });
 };
 
+//update booking status
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const { status, adminApproval } = req.body;
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (status) booking.status = status;
+    if (adminApproval !== undefined) booking.adminApproval = adminApproval;
+
+    await booking.save();
+    res.json({ message: "Booking updated", booking });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 //delete booking
 exports.deleteBooking = async (req, res) => {
@@ -232,8 +251,18 @@ exports.adminDashboard = async (req, res) => {
       .reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
 
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     // Clean storage for monthly aggregation
