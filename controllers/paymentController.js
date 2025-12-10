@@ -35,31 +35,6 @@ exports.getPayments = async (req, res) => {
   }
 };
 
-
-exports.getBookingBySession = async (req, res) => {
-  try {
-    const { session_id } = req.params;
-
-    const payment = await Payment.findOne({ transactionId: session_id }).populate({
-      path: "booking",
-      populate: { path: "provider service" },
-    });
-
-    if (!payment) return res.status(404).json({ message: "Payment not found" });
-
-    const booking = payment.booking.toObject();
-
-    // Return actual paymentStatus from DB
-    booking.paymentStatus = booking.paymentStatus || "Unpaid";
-
-    res.status(200).json({ booking });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-
 //get single paymentdetails
 exports.getPaymentById = async (req, res) => {
   try {
@@ -83,6 +58,26 @@ exports.updatePayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+//update payment status to paid 
+exports.markBookingPaid = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    if (!bookingId)
+      return res.status(400).json({ message: "Booking ID required" });
+
+    // Mark payment as paid
+    await Booking.findByIdAndUpdate(bookingId, {
+      paymentStatus: "Paid",
+    });
+
+    res.status(200).json({ message: "Payment updated to Paid" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 //delete payment
 exports.deletePayment = async (req, res) => {

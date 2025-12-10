@@ -8,9 +8,6 @@ const {Server}=require("socket.io");
 const { HfInference } = require("@huggingface/inference");
 
 
-app.use("/api/stripe", require("./routes/stripeRoutes"));
-
-
 app.use(
   express.json({
     verify: (req, res, buf) => {

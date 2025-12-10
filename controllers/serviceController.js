@@ -9,7 +9,7 @@ exports.createService = async (req, res) => {
       price,
       availableLocations,
       availability,
-      provider: req.user.id,
+      provider: req.user._id,
     });
     await service.save();
     return res
@@ -23,17 +23,17 @@ exports.createService = async (req, res) => {
 //read all
 exports.getServices = async (req, res) => {
   try {
-    const services = await Service.find().populate("provider", "name email");
+    const services = await Service.find({ isDeleted: false }).populate("provider", "name email");
     return res.status(200).json(services);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-//egt only provider's own services
+//get only provider's own services
 exports.getProviderServices = async (req, res) => {
   try {
-    const services = await Service.find({ provider: req.user.id });
+    const services = await Service.find({ provider: req.user.id,isDeleted: false });
     return res.status(200).json(services);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -96,7 +96,9 @@ exports.deleteService = async (req, res) => {
     ) {
       return res.status(403).json({ message: "Access denied" });
     }
-    await Service.findByIdAndDelete(id);
+     // ❗ Soft delete instead of hard delete
+    service.isDeleted = true;
+    await service.save();
     return res.status(200).json({ message: "service deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

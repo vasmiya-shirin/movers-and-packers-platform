@@ -12,8 +12,8 @@ router.post(
   paymentController.createPayment
 );
 router.get("/", authUser, checkRole(["admin"]), paymentController.getPayments);
-router.get("/session-booking/:session_id",authUser,paymentController.getBookingBySession)
 router.get("/:id", authUser, paymentController.getPaymentById);
+router.put("/mark-paid",authUser,paymentController.markBookingPaid)
 router.put(
   "/:id",
   authUser,

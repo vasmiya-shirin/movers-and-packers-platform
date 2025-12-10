@@ -12,6 +12,8 @@ const serviceSchema = new mongoose.Schema({
   availableLocations: [ String ],
   availability: [Date],
   isActive: { type: Boolean, default: true },
+  isDeleted: { type: Boolean, default: false },
+
 });
 
 module.exports = mongoose.model("Service", serviceSchema);
