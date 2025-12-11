@@ -8,7 +8,8 @@ const upload = require("../middlewares/multer");
 router.post("/register", upload.single("profilePic"), userController.register);
 router.post("/login", userController.login);
 router.post("/forgot-password", userController.forgotPassword);
-router.post("/reset-password/:token", userController.resetPassword);
+router.post("/verify-otp",userController.verifyOTP)
+router.post("/reset-password/", userController.resetPassword);
 router.get("/profile", authUser, userController.getProfile);
 router.put("/edit-profile", authUser, userController.updateLoggedInUser);
 router.get("/", authUser, checkRole(["admin"]), userController.getAllusers);
