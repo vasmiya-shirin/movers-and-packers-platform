@@ -141,6 +141,26 @@ exports.updateBookingStatus = async (req, res) => {
   }
 };
 
+//update tracking status
+exports.updateTrackingStatus = async (req, res) => {
+  try {
+    const { bookingId, status } = req.body;
+
+    const booking = await Booking.findByIdAndUpdate(
+      bookingId,
+      {
+        trackingStatus: status,
+        $push: { trackingHistory: { status } },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Tracking updated", booking });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 //delete booking
 exports.deleteBooking = async (req, res) => {
   try {

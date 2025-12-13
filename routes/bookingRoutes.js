@@ -31,7 +31,8 @@ router.get(
   bookingController.adminDashboard
 );
 router.get("/:id", authUser, bookingController.getBookingById);
-router.put("/:id",authUser,checkRole(["admin"]),bookingController.updateBookingStatus)
+router.put("/update-tracking",authUser,checkRole(["provider","admin"]),bookingController.updateTrackingStatus)
+router.put("/:id/status",authUser,checkRole(["admin",'provider']),bookingController.updateBookingStatus)
 router.put("/:id", authUser, bookingController.updateBooking);
 router.delete("/:id", authUser, bookingController.deleteBooking);
 

@@ -22,9 +22,22 @@ const bookingSchema = new mongoose.Schema(
     date: { type: Date, required: true },
     status: {
       type: String,
-      enum: ["Pending", "Accepted", "In Progress", "Completed", "Cancelled"],
+      enum: [
+        "Pending",
+        "Accepted",
+        "In Progress",
+        "Completed",
+        "Approved",
+        "Cancelled",
+      ],
       default: "Pending",
     },
+
+    adminApproval: {
+      type: Boolean,
+      default: false,
+    },
+
     totalPrice: { type: Number },
     paymentStatus: {
       type: String,
@@ -32,8 +45,26 @@ const bookingSchema = new mongoose.Schema(
       default: "Unpaid",
     },
     adminApproval: { type: Boolean, default: false },
+    trackingStatus: {
+      type: String,
+      enum: [
+        "Booked",
+        "Packing Started",
+        "In Transit",
+        "Out for Delivery",
+        "Delivered",
+      ],
+      default: "Booked",
+    },
+
+    trackingHistory: [
+      {
+        status: String,
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
-  
+
   { timestamps: true }
 );
 
