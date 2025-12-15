@@ -3,16 +3,23 @@ const router = express.Router();
 const serviceController = require("../controllers/serviceController");
 const { authUser } = require("../middlewares/auth");
 const { checkRole } = require("../middlewares/roleCheck");
+const requireVerifiedProvider = require("../middlewares/requireVerifiedProvider");
 
 router.post(
   "/",
   authUser,
   checkRole(["provider"]),
+  requireVerifiedProvider,
   serviceController.createService
 );
 router.get("/", serviceController.getServices);
 // GET /my-services -> only provider's own services
-router.get("/my-services", authUser, checkRole(["provider"]), serviceController.getProviderServices);
+router.get(
+  "/my-services",
+  authUser,
+  checkRole(["provider"]),
+  serviceController.getProviderServices
+);
 
 router.get("/:id", serviceController.getServiceById);
 router.put(
