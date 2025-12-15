@@ -7,8 +7,17 @@ const paymentSchema = new mongoose.Schema(
       ref: "Booking",
       required: true,
     },
-    amount: { type: Number, required: true },
-    paymentMethod: { type: String, enum: ["Card", "UPI", "NetBanking"] },
+    amount: {
+      type: Number,
+      required: true,
+      min: [1, "Payment amount must be greater than zero"],
+    },
+
+    paymentMethod: {
+      type: String,
+      enum: ["Card", "UPI", "NetBanking","Stripe"],
+    },
+
     status: {
       type: String,
       enum: ["Pending", "Completed", "Failed"],

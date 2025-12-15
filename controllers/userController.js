@@ -38,7 +38,7 @@ exports.register = async (req, res) => {
       role,
       address,
       profilePic: imageUrl,
-      isVerified: role === "provider" ? false : true,
+      isVerifiedProvider: role === "provider" ? false : true,
     });
 
     return res.status(201).json({

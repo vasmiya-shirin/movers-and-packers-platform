@@ -19,12 +19,23 @@ const reviewSchema = new mongoose.Schema(
     },
     rating: {
       type: Number,
+      required: true,
       min: 1,
       max: 5,
     },
-    comment: { type: String },
+    comment: {
+      type: String,
+      trim: true,
+      maxlength: [300, "Comment too long"],
+    },
   },
   { timestamps: true }
+);
+
+// One review per booking per client
+reviewSchema.index(
+  { booking: 1, client: 1 },
+  { unique: true }
 );
 
 module.exports = mongoose.model("Review", reviewSchema);

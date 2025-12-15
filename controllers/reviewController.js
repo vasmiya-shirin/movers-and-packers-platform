@@ -2,19 +2,46 @@ const Review = require("../models/reviewModel");
 
 //Add a review (Client
 exports.addReview = async (req, res) => {
-  try {
+try {
     const { booking, provider, rating, comment } = req.body;
-    const review = new Review({
+    const client = req.user.id; // Set client from authenticated user
+
+    // Validate required fields
+    if (!booking || !provider || !rating) {
+      return res.status(400).json({ message: "Booking, provider, and rating are required" });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
+
+    if (comment && comment.length > 300) {
+      return res.status(400).json({ message: "Comment cannot exceed 300 characters" });
+    }
+
+    // Attempt to create review
+    const review = await Review.create({
       booking,
       provider,
-      client: req.user.id,
+      client,
       rating,
-      comment,
+      comment: comment?.trim(),
     });
-    await review.save();
-    res.status(200).json({ message: "success", review });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(201).json({
+      message: "Review submitted successfully",
+      review,
+    });
+  } catch (err) {
+    // Handle duplicate review error (unique index)
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: "You have already submitted a review for this booking",
+      });
+    }
+
+    console.error("Create Review Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 

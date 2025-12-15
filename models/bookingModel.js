@@ -17,8 +17,8 @@ const bookingSchema = new mongoose.Schema(
       ref: "Service",
       required: true,
     },
-    pickupLocation: { type: String, required: true },
-    dropLocation: { type: String, required: true },
+    pickupLocation: { type: String, required: true, trim: "true" },
+    dropLocation: { type: String, required: true, trim: "true" },
     date: { type: Date, required: true },
     status: {
       type: String,
@@ -38,7 +38,11 @@ const bookingSchema = new mongoose.Schema(
       default: false,
     },
 
-    totalPrice: { type: Number },
+    totalPrice: {
+      type: Number,
+      min: [0, "Total price must be positive"],
+    },
+
     paymentStatus: {
       type: String,
       enum: ["Unpaid", "Paid"],
