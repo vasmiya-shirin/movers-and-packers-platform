@@ -10,7 +10,7 @@ exports.createPayment = async (req, res) => {
     const payment = await Payment.create({
       booking,
       amount,
-      paymentMethod,
+      paymentMethod:"Stripe",
       status: "Completed",
     });
 
