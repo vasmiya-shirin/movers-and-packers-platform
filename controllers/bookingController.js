@@ -190,11 +190,11 @@ exports.providerDashboard = async (req, res) => {
     // Stats
     const total = bookings.length;
     const pending = bookings.filter((b) => b.status === "Pending").length;
-    const completed = bookings.filter((b) => b.status === "Completed").length;
+    const completed = bookings.filter((b) => b.status === "Approved").length;
     const cancelled = bookings.filter((b) => b.status === "Cancelled").length;
 
     const earnings = bookings
-      .filter((b) => b.status === "Completed")
+      .filter((b) => b.status === "Approved")
       .reduce((sum, b) => sum + parseFloat(b.service?.price || 0), 0);
 
     const monthNames = [
@@ -216,7 +216,7 @@ exports.providerDashboard = async (req, res) => {
     let monthlyCounts = {};
 
     for (let b of bookings) {
-      if (b.status !== "Completed") continue;
+      if (b.status !== "Approved") continue;
 
       const month = monthNames[new Date(b.createdAt).getMonth()];
       const amount = parseFloat(b.service?.price || 0);
@@ -262,12 +262,12 @@ exports.adminDashboard = async (req, res) => {
 
     const totalBookings = bookings.length;
     const pending = bookings.filter((b) => b.status === "Pending").length;
-    const completed = bookings.filter((b) => b.status === "Completed").length;
+    const completed = bookings.filter((b) => b.status === "Approved").length;
     const cancelled = bookings.filter((b) => b.status === "Cancelled").length;
 
     // Correct earnings calculation (no more 200002000)
     const earnings = bookings
-      .filter((b) => b.status === "Completed")
+      .filter((b) => b.status === "Approved")
       .reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
 
     const monthNames = [
@@ -290,7 +290,7 @@ exports.adminDashboard = async (req, res) => {
     let monthlyCounts = {};
 
     for (let b of bookings) {
-      if (b.status !== "Completed") continue;
+      if (b.status !== "Approved") continue;
 
       const monthIndex = new Date(b.createdAt).getMonth();
       const month = monthNames[monthIndex];
