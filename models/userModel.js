@@ -14,19 +14,25 @@ const userSchema = new mongoose.Schema(
       default: "client",
     },
     address: { type: String },
-    isVerified: { type: Boolean, default: false },
     profilePic: {
       type: String, // Cloudinary image URL
       default: "", // Default empty string
     },
-    verification: {
-      idProof: String,
-      license: String,
-      status: {
-        type: String,
-        enum: ["Pending", "Approved", "Rejected"],
-        default: "Pending",
-      },
+     // 🔐 PROVIDER VERIFICATION
+    isVerifiedProvider: {
+      type: Boolean,
+      default: false,
+    },
+
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+
+    verificationDocs: {
+      type: [String],
+      default: [],
     },
     availability: {
       days: [String],

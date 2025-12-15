@@ -1,5 +1,6 @@
 const Payment = require("../models/paymentModel");
 const Booking = require("../models/bookingModel");
+
 //create payment
 exports.createPayment = async (req, res) => {
   try {

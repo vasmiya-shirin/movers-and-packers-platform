@@ -4,7 +4,7 @@ const bookingController = require("../controllers/bookingController");
 const { authUser } = require("../middlewares/auth");
 const { checkRole } = require("../middlewares/roleCheck");
 const { route } = require("./paymentRoutes");
-
+const requireVerifiedProvider=require("../middlewares/requireVerifiedProvider")
 router.post(
   "/",
   authUser,
@@ -31,8 +31,8 @@ router.get(
   bookingController.adminDashboard
 );
 router.get("/:id", authUser, bookingController.getBookingById);
-router.put("/update-tracking",authUser,checkRole(["provider","admin"]),bookingController.updateTrackingStatus)
-router.put("/:id/status",authUser,checkRole(["admin",'provider']),bookingController.updateBookingStatus)
+router.put("/update-tracking",authUser,checkRole(["provider","admin"]),requireVerifiedProvider,bookingController.updateTrackingStatus)
+router.put("/:id/status",authUser,checkRole(["admin",'provider']),requireVerifiedProvider,bookingController.updateBookingStatus)
 router.put("/:id", authUser, bookingController.updateBooking);
 router.delete("/:id", authUser, bookingController.deleteBooking);
 

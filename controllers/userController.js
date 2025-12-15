@@ -60,12 +60,7 @@ exports.login = async (req, res) => {
     const ismatch = await bcrypt.compare(password, user.password);
     if (!ismatch) return res.status(400).json({ message: "Invalid password" });
 
-    if (user.role === "provider" && user.isVerified === false) {
-      return res.status(403).json({
-        message: "Your provider account is awaiting admin approval.",
-      });
-    }
-
+    
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
